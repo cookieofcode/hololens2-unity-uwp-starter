@@ -13,9 +13,9 @@ cbuffer ViewProjectionConstantBuffer : register(b1)
 // Per-vertex data used as input to the vertex shader.
 struct VertexShaderInput
 {
-    min16float3 pos     : POSITION;
-    min16float3 color   : COLOR0;
-    uint        instId  : SV_InstanceID;
+    float3 pos      : POSITION;
+    float3 color    : COLOR0;
+    uint   instId   : SV_InstanceID;
 };
 
 // Simple shader to do vertex processing on the GPU.
@@ -35,7 +35,7 @@ VertexShaderOutput main(VertexShaderInput input)
 
     // Correct for perspective and project the vertex position onto the screen.
     pos = mul(pos, viewProjection[idx]);
-    output.pos = (min16float4)pos;
+    output.pos = pos;
 
     // Pass the color through without modification.
     output.color = input.color;

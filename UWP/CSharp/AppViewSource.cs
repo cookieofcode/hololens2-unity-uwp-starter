@@ -1,6 +1,6 @@
 ﻿using Windows.ApplicationModel.Core;
 
-namespace BasicHologram
+namespace CSharp
 {
     // The entry point for the app.
     internal class AppViewSource : IFrameworkViewSource

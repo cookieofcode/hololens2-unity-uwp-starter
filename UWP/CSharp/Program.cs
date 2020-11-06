@@ -1,7 +1,7 @@
 ﻿using System;
 using Windows.ApplicationModel.Core;
 
-namespace BasicHologram
+namespace CSharp
 {
     /// <summary>
     /// Windows Holographic application using SharpDX.

@@ -7,7 +7,7 @@ using System.Threading;
 using Windows.Graphics.DirectX.Direct3D11;
 using Windows.Graphics.Holographic;
 
-namespace BasicHologram.Common
+namespace CSharp.Common
 {
     /// <summary>
     /// Controls all the DirectX device resources.
@@ -106,7 +106,7 @@ namespace BasicHologram.Common
             // The holographic space might need to determine which adapter supports
             // holograms, in which case it will specify a non-zero PrimaryAdapterId.
             int shiftPos = sizeof(uint);
-            ulong id = (ulong)holographicSpace.PrimaryAdapterId.LowPart | (((ulong)holographicSpace.PrimaryAdapterId.HighPart) << shiftPos);
+            long id = (long)holographicSpace.PrimaryAdapterId.LowPart | (((long)holographicSpace.PrimaryAdapterId.HighPart) << shiftPos);
 
             // When a primary adapter ID is given to the app, the app should find
             // the corresponding DXGI adapter and use it to create Direct3D devices
@@ -118,12 +118,13 @@ namespace BasicHologram.Common
                 using (var dxgiFactory4 = new SharpDX.DXGI.Factory4())
                 {
                     // Retrieve the adapter specified by the holographic space.
-                    IntPtr adapterPtr;
-                    dxgiFactory4.EnumAdapterByLuid((long)id, InteropStatics.IDXGIAdapter3, out adapterPtr);
-
-                    if (adapterPtr != IntPtr.Zero)
+                    var adapters = dxgiFactory4.Adapters1;
+                    foreach (var adapter in adapters)
                     {
-                        dxgiAdapter = new SharpDX.DXGI.Adapter3(adapterPtr);
+                        if (adapter.Description1.Luid == id)
+                        {
+                            dxgiAdapter = adapter as SharpDX.DXGI.Adapter3;
+                        }
                     }
                 }
             }
@@ -321,11 +322,17 @@ namespace BasicHologram.Common
         /// </summary>
         public void Trim()
         {
-            d3dContext.ClearState();
-
-            using (var dxgiDevice = d3dDevice.QueryInterface<SharpDX.DXGI.Device3>())
+            if (null != d3dContext)
             {
-                dxgiDevice.Trim();
+                d3dContext.ClearState();
+            }
+
+            if (null != d3dDevice)
+            {
+                using (var dxgiDevice = d3dDevice.QueryInterface<SharpDX.DXGI.Device3>())
+                {
+                    dxgiDevice.Trim();
+                }
             }
         }
 
@@ -333,14 +340,10 @@ namespace BasicHologram.Common
         /// Present the contents of the swap chain to the screen.
         /// Locks the set of holographic camera resources until the function exits.
         /// </summary>
-        public void Present(ref HolographicFrame frame)
+        public void Present(HolographicFrame frame)
         {
-            // By default, this API waits for the frame to finish before it returns.
-            // Holographic apps should wait for the previous frame to finish before 
-            // starting work on a new frame. This allows for better results from
-            // holographic frame predictions.
             var presentResult = frame.PresentUsingCurrentPrediction(
-                HolographicFramePresentWaitBehavior.WaitForFrameToFinish
+                HolographicFramePresentWaitBehavior.DoNotWaitForFrameToFinish
                 );
 
             // The PresentUsingCurrentPrediction API will detect when the graphics device

@@ -1,6 +1,6 @@
 using System;
 
-namespace BasicHologram.Common
+namespace CSharp.Common
 {
     // A base class that tracks resources allocated by native code. This class is
     // used to release COM references to DirectX resources.

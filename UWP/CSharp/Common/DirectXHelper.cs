@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using System.Numerics;
 
-namespace BasicHologram.Common
+namespace CSharp.Common
 {
     internal static class DirectXHelper
     {

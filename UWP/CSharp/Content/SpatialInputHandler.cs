@@ -1,6 +1,6 @@
 ﻿using Windows.UI.Input.Spatial;
 
-namespace BasicHologram.Common
+namespace CSharp.Common
 {
     // Sample gesture handler.
     // Hooks up events to recognize a tap gesture, and keeps track of input using a boolean value.

@@ -1,17 +1,17 @@
 // Per-vertex data from the vertex shader.
 struct GeometryShaderInput
 {
-    min16float4 pos     : SV_POSITION;
-    min16float3 color   : COLOR0;
-    uint        instId  : TEXCOORD0;
+    float4 pos      : SV_POSITION;
+    float3 color    : COLOR0;
+    uint   instId   : TEXCOORD0;
 };
 
 // Per-vertex data passed to the rasterizer.
 struct GeometryShaderOutput
 {
-    min16float4 pos     : SV_POSITION;
-    min16float3 color   : COLOR0;
-    uint        rtvId   : SV_RenderTargetArrayIndex;
+    float4 pos      : SV_POSITION;
+    float3 color    : COLOR0;
+    uint   rtvId    : SV_RenderTargetArrayIndex;
 };
 
 // This geometry shader is a pass-through that leaves the geometry unmodified 

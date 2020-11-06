@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Numerics;
-using BasicHologram.Common;
+using CSharp.Common;
 using Windows.UI.Input.Spatial;
 
-namespace BasicHologram.Content
+namespace CSharp.Content
 {
     /// <summary>
     /// This sample renderer instantiates a basic rendering pipeline.

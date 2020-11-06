@@ -6,20 +6,20 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   IgnorableNamespaces="uap mp">
 
-  <Identity Name="Microsoft.SDKSamples.BasicHologram.CS"
-            Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+  <Identity Name="CSharp"
+            Publisher="CN=sever"
             Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="ff6444f7-13cb-433f-b736-ebeb4dc3fb4e" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="24c08439-d73c-403d-8a8b-fddcf0397097" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>Basic Hologram C# Sample</DisplayName>
-    <PublisherDisplayName>Microsoft Corporation</PublisherDisplayName>
-    <Logo>Assets\storelogo-sdk.png</Logo>
+    <DisplayName>CSharp</DisplayName>
+    <PublisherDisplayName>sever</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.10586.0" MaxVersionTested="10.0.18362.0" />
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.18362.0" />
   </Dependencies>
 
   <Resources>
@@ -29,20 +29,16 @@
   <Applications>
     <Application Id="App"
         Executable="$targetnametoken$.exe"
-        EntryPoint="BasicHologram.AppView">
-      <uap:VisualElements
-        DisplayName="Basic Hologram C# Sample"
-        Square150x150Logo="Assets\squareTile-sdk.png"
-        Square44x44Logo="Assets\smallTile-sdk.png"
-        Description="Basic Hologram C# Sample"
-        BackgroundColor="#00B2F0">
-        <uap:SplashScreen Image="Assets\splash-sdk.png" />
-        <uap:DefaultTile>
-          <uap:ShowNameOnTiles>
-            <uap:ShowOn Tile="square150x150Logo" />
-          </uap:ShowNameOnTiles>
-        </uap:DefaultTile>
-      </uap:VisualElements>
-    </Application>
+        EntryPoint="CSharp.AppView">
+        <uap:VisualElements
+             DisplayName="CSharp"
+             Square150x150Logo="Assets\Square150x150Logo.png" 
+             Square44x44Logo="Assets\Square44x44Logo.png" 
+             Description="CSharp"
+             BackgroundColor="#464646">
+          <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+          <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        </uap:VisualElements>
+      </Application>
   </Applications>
 </Package>

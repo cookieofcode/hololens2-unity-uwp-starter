@@ -5,16 +5,16 @@ using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Graphics.Holographic;
 using Windows.UI.Core;
-using BasicHologram.Common;
+using CSharp.Common;
 
-namespace BasicHologram
+namespace CSharp
 {
     /// <summary>
     /// The IFrameworkView connects the app with Windows and handles application lifecycle events.
     /// </summary>
     internal class AppView : IFrameworkView, IDisposable
     {
-        private HolographicTemplateAppMain main;
+        private CSharpMain main;
 
         private DeviceResources         deviceResources;
         private bool                    windowClosed        = false;
@@ -61,7 +61,7 @@ namespace BasicHologram
             // resources.
             deviceResources = new DeviceResources();
 
-            main = new HolographicTemplateAppMain(deviceResources);
+            main = new CSharpMain(deviceResources);
         }
 
         /// <summary>
@@ -111,18 +111,22 @@ namespace BasicHologram
         /// </summary>
         public void Run()
         {
+            HolographicFrame previousFrame = null;
+
             while (!windowClosed)
             {
                 if (windowVisible && (null != holographicSpace))
                 {
                     CoreWindow.GetForCurrentThread().Dispatcher.ProcessEvents(CoreProcessEventsOption.ProcessAllIfPresent);
                     
-                    HolographicFrame frame = main.Update();
+                    HolographicFrame currentFrame = main.Update(previousFrame);
 
-                    if (main.Render(frame))
+                    if (main.Render(currentFrame))
                     {
-                        deviceResources.Present(ref frame);
+                        deviceResources.Present(currentFrame);
                     }
+
+                    previousFrame = currentFrame;
                 }
                 else
                 {
@@ -146,26 +150,22 @@ namespace BasicHologram
         #region Application lifecycle event handlers
 
         /// <summary>
-        /// Called when the app is prelaunched.Use this method to load resources ahead of time
-        /// and enable faster launch times.
-        /// </summary>
-        public void OnLaunched(LaunchActivatedEventArgs args)
-        {
-            if (args.PrelaunchActivated)
-            {
-                //
-                // TODO: Insert code to preload resources here.
-                //
-            }
-        }
-
-        /// <summary>
         /// Called when the app view is activated. Activates the app's CoreWindow.
         /// </summary>
         private void OnViewActivated(CoreApplicationView sender, IActivatedEventArgs args)
+    {
+        if (args.Kind == ActivationKind.Launch)
         {
-            // Run() won't start until the CoreWindow is activated.
-            sender.CoreWindow.Activate();
+            LaunchActivatedEventArgs launchArgs = args as LaunchActivatedEventArgs;
+            if (launchArgs.PrelaunchActivated)
+            {
+                // Opt-out of Prelaunch.
+                CoreApplication.Exit();
+            }
+        }
+
+        // Run() won't start until the CoreWindow is activated.
+        sender.CoreWindow.Activate();
         }
 
         private void OnSuspending(object sender, SuspendingEventArgs args)
@@ -178,7 +178,10 @@ namespace BasicHologram
 
             Task.Run(() =>
                 {
-                    deviceResources.Trim();
+                    if (null != deviceResources)
+                    {
+                        deviceResources.Trim();
+                    }
 
                     if (null != main)
                     {

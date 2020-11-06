@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace BasicHologram.Content
+namespace CSharp.Content
 {
     /// <summary>
     /// Constant buffer used to send hologram position transform to the shader pipeline.
