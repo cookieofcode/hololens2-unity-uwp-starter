@@ -7,9 +7,9 @@
 //     * Delete the Content folder provided with this template.
 //
 #define DRAW_SAMPLE_CONTENT
+#define ENABLE_WINMD_SUPPORT
 
 using System;
-using System.Diagnostics;
 using Windows.Gaming.Input;
 using Windows.Graphics.DirectX.Direct3D11;
 using Windows.Graphics.Holographic;
@@ -21,9 +21,15 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
 using System.Collections.Generic;
-
+using System.Threading;
+using Debug = System.Diagnostics.Debug;
 #if DRAW_SAMPLE_CONTENT
+using Windows.Media.MediaProperties;
+using Windows.UI.Core;
 using CSharp.Content;
+using CSharp.Shared;
+using SDKTemplate;
+
 #endif
 
 namespace CSharp
@@ -37,25 +43,27 @@ namespace CSharp
 #if DRAW_SAMPLE_CONTENT
         // Renders a colorful holographic cube that's 20 centimeters wide. This sample content
         // is used to demonstrate world-locked rendering.
-        private SpinningCubeRenderer        spinningCubeRenderer;
-        
-        private SpatialInputHandler         spatialInputHandler;
+        private SpinningCubeRenderer spinningCubeRenderer;
+
+        private SpatialInputHandler spatialInputHandler;
+
+        private Camera camera;
 #endif
 
         // Cached reference to device resources.
-        private DeviceResources             deviceResources;
+        private DeviceResources deviceResources;
 
         // Render loop timer.
-        private StepTimer                   timer = new StepTimer();
+        private StepTimer timer = new StepTimer();
 
         // Represents the holographic space around the user.
-        HolographicSpace                    holographicSpace;
+        HolographicSpace holographicSpace;
 
         // SpatialLocator that is attached to the default HolographicDisplay.
-        SpatialLocator                      spatialLocator;
+        SpatialLocator spatialLocator;
 
         // A stationary reference frame based on spatialLocator.
-        SpatialStationaryFrameOfReference   stationaryReferenceFrame;
+        SpatialStationaryFrameOfReference stationaryReferenceFrame;
 
         // Keep track of gamepads.
         private class GamepadWithButtonState
@@ -70,22 +78,24 @@ namespace CSharp
                 this.buttonAWasPressedLastFrame = buttonAWasPressedLastFrame;
             }
         };
-        List<GamepadWithButtonState>        gamepads = new List<GamepadWithButtonState>();
+        List<GamepadWithButtonState> gamepads = new List<GamepadWithButtonState>();
 
         // Keep track of mouse input.
-        bool                                pointerPressed = false;
+        bool pointerPressed = false;
 
         // Cache whether or not the HolographicCamera.Display property can be accessed.
-        bool                                canGetHolographicDisplayForCamera = false;
+        bool canGetHolographicDisplayForCamera = false;
 
         // Cache whether or not the HolographicDisplay.GetDefault() method can be called.
-        bool                                canGetDefaultHolographicDisplay = false;
+        bool canGetDefaultHolographicDisplay = false;
 
         // Cache whether or not the HolographicCameraRenderingParameters.CommitDirect3D11DepthBuffer() method can be called.
-        bool                                canCommitDirect3D11DepthBuffer = false;
+        bool canCommitDirect3D11DepthBuffer = false;
 
         // Cache whether or not the HolographicFrame.WaitForNextFrameReady() method can be called.
-        bool                                canUseWaitForNextFrameReadyAPI = false;
+        bool canUseWaitForNextFrameReadyAPI = false;
+
+        private bool _cameraIsRunning = false;
 
         /// <summary>
         /// Loads and initializes application assets when the application is loaded.
@@ -96,7 +106,7 @@ namespace CSharp
             this.deviceResources = deviceResources;
 
             // Register to be notified if the Direct3D device is lost.
-            this.deviceResources.DeviceLost     += this.OnDeviceLost;
+            this.deviceResources.DeviceLost += this.OnDeviceLost;
             this.deviceResources.DeviceRestored += this.OnDeviceRestored;
 
             // If connected, a game controller can also be used for input.
@@ -107,7 +117,7 @@ namespace CSharp
             {
                 OnGamepadAdded(null, gamepad);
             }
-            
+
             canGetHolographicDisplayForCamera = ApiInformation.IsPropertyPresent(typeof(HolographicCamera).FullName, "Display");
             canGetDefaultHolographicDisplay = ApiInformation.IsMethodPresent(typeof(HolographicDisplay).FullName, "GetDefault");
             canCommitDirect3D11DepthBuffer = ApiInformation.IsMethodPresent(typeof(HolographicCameraRenderingParameters).FullName, "CommitDirect3D11DepthBuffer");
@@ -263,7 +273,7 @@ namespace CSharp
             }
 #endif
 
-            timer.Tick(() => 
+            timer.Tick(() =>
             {
                 //
                 // TODO: Update scene objects.
@@ -288,7 +298,7 @@ namespace CSharp
                 // The HolographicCameraRenderingParameters class provides access to set
                 // the image stabilization parameters.
                 HolographicCameraRenderingParameters renderingParameters = holographicFrame.GetRenderingParameters(cameraPose);
- 
+
                 // SetFocusPoint informs the system about a specific point in your scene to
                 // prioritize for image stabilization. The focus point is set independently
                 // for each holographic camera. When setting the focus point, put it on or 
@@ -358,7 +368,7 @@ namespace CSharp
                     context.OutputMerger.SetRenderTargets(depthStencilView, renderTargetView);
 
                     // Clear the back buffer and depth stencil view.
-                    if (canGetHolographicDisplayForCamera && 
+                    if (canGetHolographicDisplayForCamera &&
                         cameraPose.HolographicCamera.Display.IsOpaque)
                     {
                         SharpDX.Mathematics.Interop.RawColor4 cornflowerBlue = new SharpDX.Mathematics.Interop.RawColor4(0.392156899f, 0.58431375f, 0.929411829f, 1.0f);
@@ -534,6 +544,8 @@ namespace CSharp
                 //       of the HolographicCamera object, and can be used to create off-screen
                 //       render targets that match the resolution of the HolographicCamera.
                 //
+
+                camera = Camera.CreateAsync(VideoProfileFormats.BalancedVideoAndPhoto896x504x30, MediaEncodingSubtypes.Nv12).GetAwaiter().GetResult();
 
                 // Create device-based resources for the holographic camera and add it to the list of
                 // cameras used for updates and rendering. Notes:
