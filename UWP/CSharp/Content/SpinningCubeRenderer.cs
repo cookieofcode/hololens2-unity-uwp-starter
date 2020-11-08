@@ -306,5 +306,7 @@ namespace CSharp.Content
             get { return position;  }
             set { position = value; }
         }
+
+        public void SetTargetPosition(System.Numerics.Vector3 position) { this.position = position; }
     }
 }

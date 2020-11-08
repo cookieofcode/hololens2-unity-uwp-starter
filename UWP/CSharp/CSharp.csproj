@@ -104,6 +104,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Common\VideoFrameProcessor.cs" />
     <Compile Include="CSharpMain.cs" />
     <Compile Include="AppView.cs" />
     <Compile Include="AppViewSource.cs" />
@@ -124,6 +125,7 @@
     <Compile Include="Shared\CameraCapture.cs" />
     <Compile Include="Shared\CameraInitializationException.cs" />
     <Compile Include="Shared\Debug.cs" />
+    <Compile Include="Shared\FaceTrackerProcessor.cs" />
     <Compile Include="Shared\VideoProfileFormats.cs" />
     <Compile Include="Shared\VideoProfileFormatService.cs" />
   </ItemGroup>

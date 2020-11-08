@@ -23,6 +23,9 @@ using Windows.Foundation.Metadata;
 using System.Collections.Generic;
 using System.Threading;
 using Debug = System.Diagnostics.Debug;
+using Windows.Graphics.Imaging;
+using Windows.Media.Capture.Frames;
+using Windows.Media.Devices.Core;
 #if DRAW_SAMPLE_CONTENT
 using Windows.Media.MediaProperties;
 using Windows.UI.Core;
@@ -47,7 +50,7 @@ namespace CSharp
 
         private SpatialInputHandler spatialInputHandler;
 
-        private Camera camera;
+        private VideoFrameProcessor videoFrameProcessor;
 #endif
 
         // Cached reference to device resources.
@@ -64,6 +67,8 @@ namespace CSharp
 
         // A stationary reference frame based on spatialLocator.
         SpatialStationaryFrameOfReference stationaryReferenceFrame;
+
+        private TimeSpan previousFrameTimestamp;
 
         // Keep track of gamepads.
         private class GamepadWithButtonState
@@ -96,6 +101,8 @@ namespace CSharp
         bool canUseWaitForNextFrameReadyAPI = false;
 
         private bool _cameraIsRunning = false;
+
+        private FaceTrackerProcessor faceTrackerProcessor;
 
         /// <summary>
         /// Loads and initializes application assets when the application is loaded.
@@ -269,7 +276,33 @@ namespace CSharp
 
                 // When a Pressed gesture is detected, the sample hologram will be repositioned
                 // two meters in front of the user.
-                spinningCubeRenderer.PositionHologram(pose);
+                // spinningCubeRenderer.PositionHologram(pose); // TODO Temporarily disabled
+
+                SpatialCoordinateSystem currentCoordinateSystem = stationaryReferenceFrame.CoordinateSystem;
+
+                if (videoFrameProcessor != null && faceTrackerProcessor != null)
+                {
+                    bool isTrackingFaces = faceTrackerProcessor.IsTrackingFaces();
+                    if (isTrackingFaces)
+                    {
+                        MediaFrameReference frame = videoFrameProcessor.GetLatestFrame(); // can return null
+                        if (frame != null)
+                        {
+                            var faces = faceTrackerProcessor.GetLatestFaces();
+                            ProcessFaces(faces, frame, currentCoordinateSystem);
+
+                            TimeSpan currentTimeStamp = frame.SystemRelativeTime.Value.Duration();
+                            if (currentTimeStamp > previousFrameTimestamp)
+                            {
+                                previousFrameTimestamp = currentTimeStamp;
+                            }
+                        }
+
+                    }
+                }
+
+
+
             }
 #endif
 
@@ -545,7 +578,9 @@ namespace CSharp
                 //       render targets that match the resolution of the HolographicCamera.
                 //
 
-                camera = Camera.CreateAsync(VideoProfileFormats.BalancedVideoAndPhoto896x504x30, MediaEncodingSubtypes.Nv12).GetAwaiter().GetResult();
+                //camera = Camera.CreateAsync(VideoProfileFormats.BalancedVideoAndPhoto896x504x30, MediaEncodingSubtypes.Nv12).GetAwaiter().GetResult();
+                videoFrameProcessor = VideoFrameProcessor.CreateAsync().GetAwaiter().GetResult();
+                faceTrackerProcessor = FaceTrackerProcessor.CreateAsync(videoFrameProcessor).GetAwaiter().GetResult();
 
                 // Create device-based resources for the holographic camera and add it to the list of
                 // cameras used for updates and rendering. Notes:
@@ -657,6 +692,90 @@ namespace CSharp
                     this.stationaryReferenceFrame = this.spatialLocator.CreateStationaryFrameOfReferenceAtCurrentLocation();
                 }
             }
+        }
+
+        private void ProcessFaces(List<BitmapBounds> faces, MediaFrameReference frame, SpatialCoordinateSystem worldCoordSystem)
+        {
+            VideoMediaFrameFormat videoFormat = frame.VideoMediaFrame.VideoFormat;
+            SpatialCoordinateSystem cameraCoordinateSystem = frame.CoordinateSystem;
+            CameraIntrinsics cameraIntrinsics = frame.VideoMediaFrame.CameraIntrinsics;
+
+            // If we can't locate the camera intrinsics, this transform will be null.
+            if (cameraIntrinsics == null)
+            {
+                return;
+            }
+
+            System.Numerics.Matrix4x4? cameraToWorld = cameraCoordinateSystem.TryGetTransformTo(worldCoordSystem);
+
+            // If we can't locate the world, this transform will be null.
+            if (cameraToWorld == null)
+            {
+                return;
+            }
+
+            float textureWidthInv = 1.0f / videoFormat.Width;
+            float textureHeightInv = 1.0f / videoFormat.Height;
+
+            // The face analysis returns very "tight fitting" rectangles.
+            // We add some padding to make the visuals more appealing.
+            int paddingForFaceRect = 24;
+            float averageFaceWidthInMeters = 0.15f;
+
+            float pixelsPerMeterAlongX = cameraIntrinsics.FocalLength.X;
+            float averagePixelsForFaceAt1Meter = pixelsPerMeterAlongX * averageFaceWidthInMeters;
+
+            // Place the cube 25cm above the center of the face.
+            System.Numerics.Vector3 cubeOffsetInWorldSpace = new System.Numerics.Vector3(0.0f, 0.25f, 0.0f);
+            BitmapBounds bestRect = new BitmapBounds();
+            System.Numerics.Vector3 bestRectPositionInCameraSpace = System.Numerics.Vector3.Zero;
+            float bestDotProduct = -1.0f;
+
+            foreach (BitmapBounds faceRect in faces)
+            {
+                Point faceRectCenterPoint = new Point(faceRect.X + faceRect.Width / 2u, faceRect.Y + faceRect.Height / 2u);
+
+                // Calculate the vector towards the face at 1 meter.
+                System.Numerics.Vector2 centerOfFace = cameraIntrinsics.UnprojectAtUnitDepth(faceRectCenterPoint);
+
+                // Add the Z component and normalize.
+                System.Numerics.Vector3 vectorTowardsFace = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3(centerOfFace.X, centerOfFace.Y, -1.0f));
+
+                // Estimate depth using the ratio of the current faceRect width with the average faceRect width at 1 meter.
+                float estimatedFaceDepth = averagePixelsForFaceAt1Meter / faceRect.Width;
+
+                // Get the dot product between the vector towards the face and the gaze vector.
+                // The closer the dot product is to 1.0, the closer the face is to the middle of the video image.
+                float dotFaceWithGaze = System.Numerics.Vector3.Dot(vectorTowardsFace, -System.Numerics.Vector3.UnitZ);
+
+                // Scale the vector towards the face by the depth, and add an offset for the cube.
+                System.Numerics.Vector3 targetPositionInCameraSpace = vectorTowardsFace * estimatedFaceDepth;
+
+                // Pick the faceRect that best matches the users gaze.
+                if (dotFaceWithGaze > bestDotProduct)
+                {
+                    bestDotProduct = dotFaceWithGaze;
+                    bestRect = faceRect;
+                    bestRectPositionInCameraSpace = targetPositionInCameraSpace;
+                }
+            }
+
+            // Transform the cube from Camera space to World space.
+            System.Numerics.Vector3 bestRectPositionInWorldspace = System.Numerics.Vector3.Transform(bestRectPositionInCameraSpace, cameraToWorld.Value);
+
+            spinningCubeRenderer.SetTargetPosition(bestRectPositionInWorldspace + cubeOffsetInWorldSpace);
+
+            // Texture Coordinates are [0,1], but our FaceRect is [0,Width] and [0,Height], so we need to normalize these coordinates
+            // We also add padding for the faceRects to make it more visually appealing.
+            float normalizedWidth = (bestRect.Width + paddingForFaceRect * 2u) * textureWidthInv;
+            float normalizedHeight = (bestRect.Height + paddingForFaceRect * 2u) * textureHeightInv;
+            float normalizedX = (bestRect.X - paddingForFaceRect) * textureWidthInv;
+            float normalizedY = (bestRect.Y - paddingForFaceRect) * textureHeightInv;
+
+            // TODO
+            //Quad
+            //.SetTexCoordScaleAndOffset({ normalizedWidth, normalizedHeight }, { normalizedX, normalizedY });
+
         }
     }
 }

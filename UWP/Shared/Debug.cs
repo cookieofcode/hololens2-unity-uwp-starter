@@ -89,5 +89,15 @@ namespace CSharp.Shared
             UnityEngine.Debug.LogErrorFormat(format, args);
 #endif 
         }
+
+        public static void LogException(Exception exception)
+        {
+#if WINDOWS_UWP
+            System.Diagnostics.Debug.WriteLine(exception.Message);
+#endif
+#if ENABLE_WINMD_SUPPORT
+            UnityEngine.Debug.LogException(exception);
+#endif 
+        }
     }
 }
