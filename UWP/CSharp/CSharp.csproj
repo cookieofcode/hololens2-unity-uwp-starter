@@ -104,7 +104,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Common\VideoFrameProcessor.cs" />
+    <Compile Include="Shared\VideoFrameProcessor.cs" />
     <Compile Include="CSharpMain.cs" />
     <Compile Include="AppView.cs" />
     <Compile Include="AppViewSource.cs" />

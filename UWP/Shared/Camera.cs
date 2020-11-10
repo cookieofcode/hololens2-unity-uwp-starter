@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Debug = CSharp.Shared.Debug;
+using Debug = Shared.Debug;
 #if ENABLE_WINMD_SUPPORT || WINDOWS_UWP
 using System.Diagnostics;
 using Windows.Media.Capture.Frames;

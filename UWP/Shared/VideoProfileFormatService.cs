@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Shared;
 #if ENABLE_WINMD_SUPPORT || WINDOWS_UWP
 using Windows.Devices.Enumeration;
 using Windows.Media.Capture;

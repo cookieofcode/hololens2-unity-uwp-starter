@@ -22,10 +22,10 @@ using Windows.Foundation;
 using Windows.Foundation.Metadata;
 using System.Collections.Generic;
 using System.Threading;
-using Debug = System.Diagnostics.Debug;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture.Frames;
 using Windows.Media.Devices.Core;
+using Shared;
 #if DRAW_SAMPLE_CONTENT
 using Windows.Media.MediaProperties;
 using Windows.UI.Core;
@@ -538,7 +538,7 @@ namespace CSharp
                     // Holograms cannot be rendered.
                     {
                         String message = "Warning! Positional tracking is " + sender.Locatability + ".";
-                        Debug.WriteLine(message);
+                        Debug.Log(message);
                     }
                     break;
 

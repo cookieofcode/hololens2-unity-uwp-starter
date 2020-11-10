@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Shared;
 #if ENABLE_WINMD_SUPPORT || WINDOWS_UWP
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture.Frames;
