@@ -10,7 +10,7 @@ Some UWP features, such as the HoloLens 2 camera access, can not be used in the 
 
 To ease development effort and provide faster feedback, this starter combines resources of a C# holographic DirectX project and Unity using MRTK in a shared resources folder. This enables fast UWP dependent development using the C# project of resources, that can be used in the Unity solution.
 
-This starter demonstrates the Microsoft [Holographic face tracking sample](https://github.com/microsoft/Windows-universal-samples/tree/master/Samples/HolographicFaceTracking). It Shows how to acquire video frames from the photo/video (PV) camera and use the FaceAnalysis API to determine if there are any faces in front of the HoloLens and a display a cube on top of the detected face.
+This starter demonstrates the Microsoft [Holographic face tracking sample](https://github.com/microsoft/Windows-universal-samples/tree/master/Samples/HolographicFaceTracking). It shows how to acquire video frames from the camera and use the UWP FaceAnalysis API to determine if there are any faces in front of the HoloLens and a display a cube on top of the detected face.
 
 ## Holographic DirectX project
 The C# project is created using the [Windows Mixed Reality App Templates](https://marketplace.visualstudio.com/items?itemName=WindowsMixedRealityteam.WindowsMixedRealityAppTemplatesVSIX) available in VisualStudio. The face tracking visualization is converted to C# from [Holographic face tracking sample](https://github.com/microsoft/Windows-universal-samples/tree/master/Samples/HolographicFaceTracking).
