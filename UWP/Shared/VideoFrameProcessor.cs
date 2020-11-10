@@ -99,9 +99,7 @@ namespace Shared
             MediaFrameReference frame = sender.TryAcquireLatestFrame();
             if (frame != null)
             {
-                //std::lock_guard < std::shared_mutex > lock (m_propertiesLock) ;
                 Interlocked.Exchange(ref m_latestFrame, frame);
-                //m_latestFrame = frame;
             }
         }
 #endif

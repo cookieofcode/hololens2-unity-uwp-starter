@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CSharp.Shared;
 
 #if ENABLE_WINMD_SUPPORT || NETFX_CORE
 using Windows.Foundation;

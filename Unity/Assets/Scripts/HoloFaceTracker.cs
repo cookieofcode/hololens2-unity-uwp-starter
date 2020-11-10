@@ -5,7 +5,7 @@ using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
 using Shared;
-
+using UnityEngine.Serialization;
 #if ENABLE_WINMD_SUPPORT
 using UnityEngine.XR.WSA;
 #endif
@@ -24,32 +24,27 @@ using Windows.UI.Input.Spatial;
 using Debug = Shared.Debug;
 #endif
 
-public class HoloFaceTracker
-#if ENABLE_WINMD_SUPPORT || UNITY_EDITOR
-    : MonoBehaviour
-#endif
+public class HoloFaceTracker : MonoBehaviour
 {
-    //private Camera camera;
-    private VideoFrameProcessor videoFrameProcessor;
-    public VideoProfileFormats videoProfileFormats = VideoProfileFormats.BalancedVideoAndPhoto896x504x30;
-    public TextMesh StatusBlock;
+    private VideoFrameProcessor _videoFrameProcessor;
+    public TextMesh statusBlock;
     private bool _isReadyToRender;
-    public GameObject Cube;
+    public GameObject cube;
     private TimeSpan _previousFrameTimestamp;
     private FaceTrackerProcessor _faceTrackerProcessor;
     private bool _isTrackingFaces;
-    public CubeRenderer CubeRenderer;
+    public CubeRenderer cubeRenderer;
 
     // Start is called before the first frame update
     async void Start()
     {
 #if ENABLE_WINMD_SUPPORT
-        StatusBlock.text = "Starting camera...";
-        videoFrameProcessor = await VideoFrameProcessor.CreateAsync();
+        statusBlock.text = "Starting camera...";
+        _videoFrameProcessor = await VideoFrameProcessor.CreateAsync();
         Debug.Log("Created video frame processor");
-        _faceTrackerProcessor = await FaceTrackerProcessor.CreateAsync(videoFrameProcessor);
+        _faceTrackerProcessor = await FaceTrackerProcessor.CreateAsync(_videoFrameProcessor);
 
-        StatusBlock.text = "No faces detected";
+        statusBlock.text = "No faces detected";
         _isReadyToRender = true;
 #endif
     }
@@ -60,17 +55,14 @@ public class HoloFaceTracker
         // If we are tracking any faces, then we render the cube over their head, and the video image on the quad.
         if (_isTrackingFaces)
         {
-            StatusBlock.text = "";
-            Cube.SetActive(true);
-            //_quadRenderer->RenderNV12(_videoTexture->GetLuminanceTexture(), _videoTexture->GetChrominanceTexture());
+            statusBlock.text = "";
+            cube.SetActive(true);
         }
         // Otherwise we render the status message on the quad.
         else
         {
-            //_quadRenderer->RenderRGB(_textRenderer->GetTexture());
-            //_quadRenderer.SetActive(false);
-            StatusBlock.text = "No faces detected";
-            Cube.SetActive(false);
+            statusBlock.text = "No faces detected";
+            cube.SetActive(false);
         }
     }
 
@@ -137,8 +129,7 @@ public class HoloFaceTracker
         // Transform the cube from Camera space to World space.
         System.Numerics.Vector3 bestRectPositionInWorldspace = System.Numerics.Vector3.Transform(bestRectPositionInCameraSpace, cameraToWorld.Value);
 
-        CubeRenderer.SetTargetPosition(bestRectPositionInWorldspace + cubeOffsetInWorldSpace); // TODO: Check this
-        //Cube.SetTargetPosition(bestRectPositionInWorldspace + cubeOffsetInWorldSpace);
+        cubeRenderer.SetTargetPosition(bestRectPositionInWorldspace + cubeOffsetInWorldSpace);
 
         // Texture Coordinates are [0,1], but our FaceRect is [0,Width] and [0,Height], so we need to normalize these coordinates
         // We also add padding for the faceRects to make it more visually appealing.
@@ -146,11 +137,6 @@ public class HoloFaceTracker
         float normalizedHeight = (bestRect.Height + paddingForFaceRect * 2u) * textureHeightInv;
         float normalizedX = (bestRect.X - paddingForFaceRect) * textureWidthInv;
         float normalizedY = (bestRect.Y - paddingForFaceRect) * textureHeightInv;
-
-        // TODO
-        //Quad
-        //.SetTexCoordScaleAndOffset({ normalizedWidth, normalizedHeight }, { normalizedX, normalizedY });
-
     }
 #endif
 
@@ -180,10 +166,9 @@ public class HoloFaceTracker
 
         if (_isTrackingFaces)
         {
-            MediaFrameReference frame = videoFrameProcessor.GetLatestFrame();
+            MediaFrameReference frame = _videoFrameProcessor.GetLatestFrame();
             if (frame == null)
             {
-                Debug.Log("media frame reference is null.");
                 return;
             }
             var faces = _faceTrackerProcessor.GetLatestFaces();
@@ -199,26 +184,6 @@ public class HoloFaceTracker
         }
 
         SpatialPointerPose pointerPose = SpatialPointerPose.TryGetAtTimestamp(currentCoordinateSystem, PerceptionTimestampHelper.FromHistoricalTargetTime(DateTimeOffset.Now));
-
-        // If we're tracking faces, then put the quad to the left side of the viewport, 2 meters out.
-        if (_isTrackingFaces)
-        {
-            // TODO: QuadRenderer
-            //m_quadRenderer->Update(pointerPose, float3{ -0.45f, 0.0f, -2.0f }, m_timer);
-        }
-        // Otherwise, put the quad centered in the viewport, 2 meters out.
-        else
-        {
-            //m_quadRenderer->ResetTexCoordScaleAndOffset();
-            //m_quadRenderer->Update(pointerPose, float3{ 0.0f, -0.15f, -2.0f }, m_timer);
-        }
-
-        // We complete the frame update by using information about our content positioning
-        // to set the focus point.
-        // Next, we get a coordinate system from the attached frame of reference that is
-        // associated with the current frame. Later, this coordinate system is used for
-        // for creating the stereo view matrices when rendering the sample content.
-        // TODO: NOPE
 #endif
     }
 }
