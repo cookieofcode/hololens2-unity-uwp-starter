@@ -21,18 +21,12 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
 using System.Collections.Generic;
-using System.Threading;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture.Frames;
 using Windows.Media.Devices.Core;
 using Shared;
 #if DRAW_SAMPLE_CONTENT
-using Windows.Media.MediaProperties;
-using Windows.UI.Core;
 using CSharp.Content;
-using CSharp.Shared;
-using SDKTemplate;
-
 #endif
 
 namespace CSharp

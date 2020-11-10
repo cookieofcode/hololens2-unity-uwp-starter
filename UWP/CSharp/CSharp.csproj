@@ -120,14 +120,8 @@
     <Compile Include="Content\SpatialInputHandler.cs" />
     <Compile Include="Content\SpinningCubeRenderer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Shared\AsyncUtil.cs" />
-    <Compile Include="Shared\Camera.cs" />
-    <Compile Include="Shared\CameraCapture.cs" />
-    <Compile Include="Shared\CameraInitializationException.cs" />
     <Compile Include="Shared\Debug.cs" />
     <Compile Include="Shared\FaceTrackerProcessor.cs" />
-    <Compile Include="Shared\VideoProfileFormats.cs" />
-    <Compile Include="Shared\VideoProfileFormatService.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
